@@ -20,9 +20,10 @@ export function useScrollAnimation(options?: {
   trigger?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current || hasAnimatedRef.current) return;
 
     const {
       y = 60,
@@ -37,6 +38,7 @@ export function useScrollAnimation(options?: {
     } = options || {};
 
     const el = ref.current;
+    hasAnimatedRef.current = true;
 
     if (stagger > 0) {
       const children = el.children;
@@ -99,7 +101,17 @@ export function useScrollAnimation(options?: {
         if (st.trigger === el) st.kill();
       });
     };
-  }, [options]);
+  }, [
+    options?.y,
+    options?.x,
+    options?.opacity,
+    options?.scale,
+    options?.blur,
+    options?.duration,
+    options?.delay,
+    options?.stagger,
+    options?.trigger,
+  ]);
 
   return ref;
 }

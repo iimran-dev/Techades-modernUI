@@ -1,169 +1,142 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { techStack, ACCENT } from './data';
+import { Palette, CheckCircle2, Layout, Code2, Layers, Sparkles } from 'lucide-react';
+import { useScrollAnimation } from './useScrollAnimation';
 
-// Deterministic expert count per tech
-const expertCounts: Record<string, number> = {};
-const seed = [8, 12, 15, 9, 7, 10, 11, 13, 14, 8, 9, 12, 13, 7, 8, 6, 7, 10, 9, 8, 11, 7, 10, 9];
-techStack.forEach((tech, i) => {
-  expertCounts[tech] = seed[i % seed.length];
-});
+interface TechItem {
+  name: string;
+  category: 'Frontend Web' | 'Backend & DB' | 'Graphic & UI/UX' | 'Design Tools';
+  color: string;
+  experts: number;
+}
 
-// Larger pills for major technologies
-const largeTechs = new Set(['React', 'Node.js', 'Python', 'Next.js', 'AWS', 'TypeScript']);
-const mediumTechs = new Set(['Flutter', 'Docker', 'Azure', 'Go', 'Kubernetes', 'GraphQL']);
+const techItems: TechItem[] = [
+  // Frontend Web Development
+  { name: 'React', category: 'Frontend Web', color: '#61DAFB', experts: 18 },
+  { name: 'Next.js', category: 'Frontend Web', color: '#000000', experts: 16 },
+  { name: 'TypeScript', category: 'Frontend Web', color: '#3178C6', experts: 20 },
+  { name: 'Tailwind CSS', category: 'Frontend Web', color: '#06B6D4', experts: 15 },
+  { name: 'Vue.js', category: 'Frontend Web', color: '#4FC08D', experts: 9 },
+  { name: 'HTML5 & CSS3', category: 'Frontend Web', color: '#E34F26', experts: 18 },
 
-// Scattered positions as percentage offsets and random-ish float params
-const positions = [
-  { x: 5, y: 8, delay: 0, dur: 6, dx: 8, dy: -5 },
-  { x: 35, y: 3, delay: 0.5, dur: 7, dx: -6, dy: 7 },
-  { x: 62, y: 10, delay: 1, dur: 5.5, dx: 5, dy: -8 },
-  { x: 85, y: 5, delay: 0.3, dur: 8, dx: -7, dy: 6 },
-  { x: 15, y: 28, delay: 1.2, dur: 6.5, dx: 9, dy: -4 },
-  { x: 48, y: 25, delay: 0.7, dur: 7.5, dx: -5, dy: 9 },
-  { x: 75, y: 30, delay: 0.2, dur: 6, dx: 6, dy: -7 },
-  { x: 2, y: 48, delay: 1.5, dur: 8, dx: -8, dy: 5 },
-  { x: 30, y: 50, delay: 0.8, dur: 5.5, dx: 7, dy: -6 },
-  { x: 58, y: 52, delay: 0.4, dur: 7, dx: -9, dy: 8 },
-  { x: 88, y: 45, delay: 1.1, dur: 6.5, dx: 5, dy: -5 },
-  { x: 20, y: 72, delay: 0.6, dur: 7.5, dx: -6, dy: 7 },
-  { x: 45, y: 75, delay: 1.3, dur: 6, dx: 8, dy: -8 },
-  { x: 72, y: 70, delay: 0.9, dur: 8, dx: -7, dy: 6 },
-  { x: 5, y: 90, delay: 0.1, dur: 5.5, dx: 9, dy: -5 },
-  { x: 38, y: 92, delay: 1.4, dur: 7, dx: -5, dy: -7 },
-  { x: 65, y: 88, delay: 0.5, dur: 6.5, dx: 6, dy: 8 },
-  { x: 90, y: 85, delay: 0.8, dur: 7.5, dx: -8, dy: -6 },
-  { x: 25, y: 15, delay: 1.6, dur: 8, dx: 4, dy: 6 },
-  { x: 55, y: 38, delay: 0.3, dur: 6, dx: -6, dy: -5 },
-  { x: 80, y: 60, delay: 1, dur: 7, dx: 7, dy: 4 },
-  { x: 10, y: 60, delay: 0.7, dur: 5.5, dx: -5, dy: -8 },
-  { x: 42, y: 65, delay: 1.2, dur: 6.5, dx: 8, dy: 7 },
-  { x: 70, y: 18, delay: 0.4, dur: 7.5, dx: -9, dy: -6 },
+  // Backend & Database
+  { name: 'Node.js', category: 'Backend & DB', color: '#339933', experts: 15 },
+  { name: 'PostgreSQL', category: 'Backend & DB', color: '#4169E1', experts: 12 },
+  { name: 'MongoDB', category: 'Backend & DB', color: '#47A248', experts: 11 },
+  { name: 'GraphQL', category: 'Backend & DB', color: '#E10098', experts: 10 },
+  { name: 'REST APIs', category: 'Backend & DB', color: '#FF7A32', experts: 16 },
+  { name: 'Express.js', category: 'Backend & DB', color: '#64748B', experts: 14 },
+
+  // Graphic & UI/UX Design
+  { name: 'UI/UX Design', category: 'Graphic & UI/UX', color: '#F24E1E', experts: 16 },
+  { name: 'Brand Identity', category: 'Graphic & UI/UX', color: '#FF7A32', experts: 12 },
+  { name: 'Motion Graphics', category: 'Graphic & UI/UX', color: '#9999FF', experts: 10 },
+  { name: 'Design Systems', category: 'Graphic & UI/UX', color: '#6C4CF1', experts: 14 },
+  { name: '3D & Vector Art', category: 'Graphic & UI/UX', color: '#EC4899', experts: 8 },
+
+  // Design Tools
+  { name: 'Figma', category: 'Design Tools', color: '#F24E1E', experts: 17 },
+  { name: 'Adobe Illustrator', category: 'Design Tools', color: '#FF9A00', experts: 14 },
+  { name: 'Adobe Photoshop', category: 'Design Tools', color: '#31A8FF', experts: 15 },
+  { name: 'After Effects', category: 'Design Tools', color: '#9999FF', experts: 9 },
+  { name: 'Adobe XD', category: 'Design Tools', color: '#FF61F6', experts: 11 },
+  { name: 'Blender 3D', category: 'Design Tools', color: '#EA7600', experts: 7 },
 ];
 
-// Color per tech
-const techColors: Record<string, string> = {
-  React: '#61DAFB',
-  'Next.js': '#000000',
-  'Node.js': '#339933',
-  PHP: '#777BB4',
-  Flutter: '#02569B',
-  Azure: '#0078D4',
-  Docker: '#2496ED',
-  OpenAI: '#412991',
-  Python: '#3776AB',
-  Laravel: '#FF2D20',
-  '.NET': '#512BD4',
-  TypeScript: '#3178C6',
-  AWS: '#FF9900',
-  'Vue.js': '#4FC08D',
-  Angular: '#DD0031',
-  Swift: '#FA7343',
-  Kotlin: '#7F52FF',
-  Go: '#00ADD8',
-  GraphQL: '#E10098',
-  MongoDB: '#47A248',
-  PostgreSQL: '#4169E1',
-  Redis: '#DC382D',
-  Kubernetes: '#326CE5',
-  Terraform: '#7B42BC',
-};
+const categories = ['All', 'Frontend Web', 'Backend & DB', 'Graphic & UI/UX', 'Design Tools'] as const;
 
 export default function TechCloud() {
-  const [hovered, setHovered] = useState<string | null>(null);
+  const headingRef = useScrollAnimation({ y: 40, blur: 4, duration: 0.7 });
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  const pills = useMemo(
-    () =>
-      techStack.map((tech, i) => {
-        const pos = positions[i % positions.length];
-        const isLarge = largeTechs.has(tech);
-        const isMedium = mediumTechs.has(tech);
-        const color = techColors[tech] || ACCENT.purple;
-
-        return { tech, pos, isLarge, isMedium, color, experts: expertCounts[tech] || 8 };
-      }),
-    []
-  );
+  // Fast memoized filtering
+  const filteredTechs = useMemo(() => {
+    return selectedCategory === 'All'
+      ? techItems
+      : techItems.filter((t) => t.category === selectedCategory);
+  }, [selectedCategory]);
 
   return (
-    <section className="py-20 md:py-28 px-4 md:px-8">
+    <section className="relative py-14 sm:py-24 md:py-28 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+      {/* Background Soft Ambient Light Orbs */}
+      <div className="absolute top-1/4 -left-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-gradient-to-tr from-purple-400/10 via-indigo-300/10 to-pink-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 -right-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-gradient-to-bl from-cyan-400/10 via-blue-300/10 to-purple-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
       <div className="max-w-6xl mx-auto">
-        {/* Heading */}
-        <div className="text-center mb-12 md:mb-16">
-          <motion.h2
-            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="gradient-text">Our Technology Arsenal</span>
+        {/* Header */}
+        <div ref={headingRef} className="text-center mb-10 sm:mb-14 md:mb-16">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-50/80 border border-purple-200/50 text-purple-700 text-[11px] sm:text-xs font-medium tracking-wide mb-3.5 shadow-xs">
+            <Sparkles size={13} className="text-purple-600" />
+            <span>Fullstack & Creative Capabilities</span>
+          </div>
+          <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-3 sm:mb-4 text-gray-900">
+            Digital Code & <span className="gradient-text">Visual Craft</span>
           </motion.h2>
-          <motion.p
-            className="text-muted-foreground text-lg md:text-xl"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            Mastery across the modern stack
-          </motion.p>
+          <p className="text-gray-500 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-1 font-normal">
+            Architecting responsive web applications, high-performance backends, and striking graphic identities.
+          </p>
         </div>
 
-        {/* Pills Cloud */}
-        <div className="relative min-h-[420px] md:min-h-[500px]">
-          {pills.map((pill, i) => (
-            <motion.div
-              key={pill.tech}
-              className="absolute cursor-pointer"
-              style={{ left: `${pill.pos.x}%`, top: `${pill.pos.y}%` }}
-              initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.05, type: 'spring', stiffness: 150 }}
-              onMouseEnter={() => setHovered(pill.tech)}
-              onMouseLeave={() => setHovered(null)}
-            >
-              {/* Floating pill */}
-              <div
-                className="relative rounded-full border border-slate-200/80 bg-white/90 backdrop-blur-sm shadow-sm flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300"
-                style={{
-                  fontSize: pill.isLarge ? '0.95rem' : pill.isMedium ? '0.85rem' : '0.75rem',
-                  fontWeight: pill.isLarge ? 600 : 500,
-                  animation: `float-slow ${pill.pos.dur}s ease-in-out ${pill.pos.delay}s infinite`,
-                  boxShadow: hovered === pill.tech
-                    ? `0 0 20px ${pill.color}40, 0 0 40px ${pill.color}20`
-                    : 'none',
-                  borderColor: hovered === pill.tech ? pill.color + '60' : undefined,
-                }}
+        {/* Category Filter Bar */}
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap mb-8 sm:mb-10 px-1">
+          {categories.map((cat) => {
+            const isActive = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer ${isActive
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20 scale-105'
+                    : 'bg-white/80 backdrop-blur-md border border-gray-200/70 text-gray-600 hover:border-purple-300 hover:text-purple-700'
+                  }`}
               >
-                {/* Color dot */}
-                <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: pill.color }}
-                />
-                <span className="text-foreground whitespace-nowrap">{pill.tech}</span>
-              </div>
+                {cat}
+              </button>
+            );
+          })}
+        </div>
 
-              {/* Hover tooltip */}
-              {hovered === pill.tech && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className="absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1 rounded-lg glass shadow-lg text-xs font-medium text-foreground whitespace-nowrap pointer-events-none"
-                >
-                  {pill.experts} Experts
-                  <div
-                    className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 glass border-t-0 border-l-0"
-                    style={{ marginTop: -1 }}
-                  />
-                </motion.div>
-              )}
+        {/* Modern Fluid Glass Tag Mesh (Non-Card Layout) */}
+        <motion.div
+          key={selectedCategory}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 max-w-5xl mx-auto px-1"
+        >
+          {filteredTechs.map((tech) => (
+            <motion.div
+              key={tech.name}
+              whileHover={{ scale: 1.05, y: -2 }}
+              transition={{ duration: 0.2 }}
+              className="group relative inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-white/80 backdrop-blur-md border border-gray-200/70 shadow-xs hover:shadow-lg hover:border-purple-300 transition-all duration-300 cursor-pointer"
+            >
+              {/* Brand Color Ambient Spot Glow on Hover */}
+              <div
+                className="absolute inset-0 rounded-full blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"
+                style={{ background: tech.color }}
+              />
+
+              {/* Glowing Brand Indicator Dot */}
+              <span
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-xs group-hover:scale-125 transition-transform"
+                style={{ background: tech.color }}
+              />
+
+              {/* Tech Name */}
+              <span className="text-xs sm:text-sm font-semibold text-gray-800 tracking-tight group-hover:text-purple-700 transition-colors">
+                {tech.name}
+              </span>
+
+              {/* Experts Pill */}
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100/90 border border-gray-200/50 text-gray-500 group-hover:bg-purple-50 group-hover:text-purple-600 group-hover:border-purple-200/60 transition-colors">
+                {tech.experts} Experts
+              </span>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

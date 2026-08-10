@@ -5,21 +5,49 @@ import Image from 'next/image';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
-import { ArrowDown, Sparkles } from 'lucide-react';
-import { teamMembers, ACCENT, GRADIENT } from './data';
+import {
+  ArrowDown, Sparkles, Layers, Palette, Boxes, Video, FileText,
+  Globe, ShoppingBag, Layout, FolderTree, AppWindow, Code2,
+  Building2, Webhook, Server, Database, RefreshCw, Rocket,
+  Cloud, Workflow, Zap, Terminal, Activity,
+  Bot, Cpu, Cog, BarChart3, LineChart, MessageSquare,
+  Smartphone, Tablet, ShieldCheck, Search, Lock, Lightbulb
+} from 'lucide-react';
+import {
+  SiFigma, SiReact, SiShopify, SiWordpress, SiGraphql,
+  SiNodedotjs, SiPostgresql, SiDocker,
+  SiKubernetes, SiVercel, SiTerraform, SiDatadog,
+  SiPython, SiFlutter
+} from 'react-icons/si';
+
+import { techServices, ACCENT, GRADIENT } from './data';
+import type { ServiceOffer } from './data';
+import { getAssetPath } from '@/utils/basePath';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-/* ---------- helpers ---------- */
+/* ---------- icon map ---------- */
+const iconMap: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+  Palette, Sparkles, Layers, Boxes, Video, FileText,
+  Globe, ShoppingBag, Layout, FolderTree, AppWindow, Code2,
+  Building2, Webhook, Server, Database, RefreshCw, Rocket,
+  Cloud, Workflow, Zap, Terminal, Activity,
+  Bot, Cpu, Cog, BarChart3, LineChart, MessageSquare,
+  Smartphone, Tablet, ShieldCheck, Search, Lock, Lightbulb,
+  SiFigma, SiReact, SiShopify, SiWordpress, SiGraphql,
+  SiNodedotjs, SiPostgresql, SiDocker,
+  SiKubernetes, SiVercel, SiTerraform, SiDatadog,
+  SiPython, SiFlutter
+};
 
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? '';
-  const last = parts[parts.length > 1 ? 1 : 0]?.[0] ?? '';
-  return (first + last).toUpperCase();
+function RenderServiceIcon({ iconName, size }: { iconName: string; size: number }) {
+  const IconComponent = iconMap[iconName] || Globe;
+  return <IconComponent size={size} />;
 }
+
+/* ---------- helpers ---------- */
 
 // Deterministic pseudo-random from index
 function seededRandom(seed: number) {
@@ -36,8 +64,8 @@ const RINGS = [
 
 /* ---------- types ---------- */
 
-interface AvatarPosition {
-  member: (typeof teamMembers)[number];
+interface ServicePosition {
+  service: ServiceOffer;
   x: number;
   y: number;
   ring: number;
@@ -50,19 +78,19 @@ export default function HeroSection() {
   const containerRef = useRef<HTMLElement>(null);
   const ecosystemRef = useRef<HTMLDivElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
-  const [hoveredMember, setHoveredMember] = useState<AvatarPosition | null>(null);
+  const [hoveredService, setHoveredService] = useState<ServicePosition | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState({ top: 0, left: 0 });
   const mouseRef = useRef({ x: 0, y: 0 });
 
-  /* --- compute avatar positions (memoised) --- */
-  const avatarPositions = useMemo<AvatarPosition[]>(() => {
-    const positions: AvatarPosition[] = [];
+  /* --- compute service positions (memoised) --- */
+  const servicePositions = useMemo<ServicePosition[]>(() => {
+    const positions: ServicePosition[] = [];
     let idx = 0;
     RINGS.forEach((ring, ringIdx) => {
       for (let i = 0; i < ring.count && idx < 36; i++, idx++) {
         const angle = (2 * Math.PI * i) / ring.count - Math.PI / 2;
         positions.push({
-          member: teamMembers[idx],
+          service: techServices[idx],
           x: Math.cos(angle) * ring.radius,
           y: Math.sin(angle) * ring.radius,
           ring: ringIdx,
@@ -77,10 +105,10 @@ export default function HeroSection() {
   const connectionLines = useMemo(() => {
     const lines: { x1: number; y1: number; x2: number; y2: number; color: string }[] = [];
     const maxDist = 80;
-    for (let i = 0; i < avatarPositions.length; i++) {
-      for (let j = i + 1; j < avatarPositions.length; j++) {
-        const a = avatarPositions[i];
-        const b = avatarPositions[j];
+    for (let i = 0; i < servicePositions.length; i++) {
+      for (let j = i + 1; j < servicePositions.length; j++) {
+        const a = servicePositions[i];
+        const b = servicePositions[j];
         // only connect across adjacent rings or same ring neighbours
         if (Math.abs(a.ring - b.ring) > 1) continue;
         const dx = a.x - b.x;
@@ -90,13 +118,13 @@ export default function HeroSection() {
           lines.push({
             x1: a.x, y1: a.y,
             x2: b.x, y2: b.y,
-            color: a.member.color,
+            color: a.service.color,
           });
         }
       }
     }
     return lines;
-  }, [avatarPositions]);
+  }, [servicePositions]);
 
   /* --- particles --- */
   const particles = useMemo(() => {
@@ -114,14 +142,17 @@ export default function HeroSection() {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+
     const ctx = gsap.context(() => {
       // Left side
       gsap.fromTo(
         leftRef.current,
-        { opacity: 0, x: -60, filter: 'blur(6px)' },
+        { opacity: 0, x: isMobile ? 0 : -60, y: isMobile ? 30 : 0, filter: 'blur(6px)' },
         {
           opacity: 1,
           x: 0,
+          y: 0,
           filter: 'blur(0px)',
           duration: 1,
           ease: 'power3.out',
@@ -132,7 +163,7 @@ export default function HeroSection() {
       // Ecosystem
       gsap.fromTo(
         ecosystemRef.current,
-        { opacity: 0, scale: 0.7, filter: 'blur(8px)' },
+        { opacity: 0, scale: isMobile ? 0.8 : 0.7, filter: 'blur(8px)' },
         {
           opacity: 1,
           scale: 1,
@@ -147,7 +178,7 @@ export default function HeroSection() {
     return () => ctx.revert();
   }, []);
 
-  /* --- Mouse parallax --- */
+  /* --- Mouse & Touch parallax --- */
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!ecosystemRef.current) return;
     const rect = ecosystemRef.current.getBoundingClientRect();
@@ -173,16 +204,20 @@ export default function HeroSection() {
     });
   }, []);
 
-  /* --- Avatar hover --- */
-  const handleAvatarHover = useCallback(
-    (pos: AvatarPosition, e: React.MouseEvent) => {
-      setHoveredMember(pos);
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  /* --- Service hover & tap --- */
+  const handleServiceSelect = useCallback(
+    (pos: ServicePosition, e: React.MouseEvent | React.TouchEvent) => {
+      setHoveredService((prev) => (prev?.service.id === pos.service.id ? null : pos));
+      const targetEl = e.currentTarget as HTMLElement;
+      const rect = targetEl.getBoundingClientRect();
       const parentRect = ecosystemRef.current?.getBoundingClientRect();
       if (parentRect) {
+        const rawLeft = rect.left - parentRect.left + rect.width / 2;
+        // Clamp tooltip position so it stays inside mobile viewport
+        const clampedLeft = Math.max(70, Math.min(parentRect.width - 70, rawLeft));
         setTooltipStyle({
-          top: rect.top - parentRect.top - 50,
-          left: rect.left - parentRect.left + rect.width / 2,
+          top: Math.max(10, rect.top - parentRect.top - 70),
+          left: clampedLeft,
         });
       }
     },
@@ -192,7 +227,7 @@ export default function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className="relative min-h-screen flex items-center overflow-hidden py-16 sm:py-20 lg:py-28"
       style={{
         background:
           'radial-gradient(ellipse at 30% 50%, rgba(108,76,241,0.04) 0%, rgba(0,194,255,0.02) 40%, transparent 70%), #fff',
@@ -200,32 +235,31 @@ export default function HeroSection() {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-8">
           {/* ===== LEFT CONTENT ===== */}
           <div
             ref={leftRef}
             className="flex-1 max-w-xl lg:max-w-lg text-center lg:text-left"
           >
             {/* Heading */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-bold leading-[1.12] tracking-tight text-gray-900">
-              Great Products Are Built By{' '}
-              <span className="gradient-text">Great People.</span>
+            <h1 className="text-3xl sm:text-5xl lg:text-[3.4rem] font-bold leading-[1.15] tracking-tight text-gray-900">
+              Transforming Businesses Through{' '}
+              <span className="gradient-text">Technology & AI.</span>
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-6 text-base sm:text-lg text-gray-500 leading-relaxed max-w-md mx-auto lg:mx-0">
-              40+ specialists working together across technologies, industries,
-              and locations to build digital products that scale.
+            <p className="mt-4 sm:mt-6 text-sm sm:text-lg text-gray-500 leading-relaxed max-w-md mx-auto lg:mx-0">
+              One stop for end-to-end IT services, custom software engineering, cloud architecture, and artificial intelligence solutions.
             </p>
 
             {/* Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center lg:justify-start w-full">
               <motion.a
-                href="#team"
+                href="#capabilities"
                 whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-semibold text-sm shadow-lg"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-white font-semibold text-sm shadow-lg"
                 style={{
                   background: GRADIENT.purpleToOrange,
                   boxShadow:
@@ -233,14 +267,14 @@ export default function HeroSection() {
                 }}
               >
                 <Sparkles className="w-4 h-4" />
-                Meet Our Experts
+                Explore Services
               </motion.a>
 
               <motion.a
                 href="#contact"
                 whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-semibold text-sm border-2 text-gray-700 hover:text-gray-900 transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full font-semibold text-sm border-2 text-gray-700 hover:text-gray-900 transition-colors"
                 style={{
                   borderColor: 'rgba(108,76,241,0.25)',
                   background: 'rgba(108,76,241,0.03)',
@@ -253,25 +287,25 @@ export default function HeroSection() {
 
             {/* Floating counter badge */}
             <motion.div
-              className="mt-10 inline-flex items-center gap-3 px-5 py-2.5 rounded-full glass shadow-md"
+              className="mt-8 sm:mt-10 inline-flex items-center gap-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full glass shadow-md"
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
               <span
-                className="flex items-center justify-center w-9 h-9 rounded-full text-white text-xs font-bold"
+                className="flex items-center justify-center w-8 sm:w-9 h-8 sm:h-9 rounded-full text-white text-xs font-bold"
                 style={{ background: GRADIENT.purpleToBlue }}
               >
-                40+
+                36+
               </span>
-              <span className="text-sm font-medium text-gray-700">
-                Specialists
+              <span className="text-xs sm:text-sm font-medium text-gray-700">
+                End-to-End Services
               </span>
               <span className="flex -space-x-2">
                 {[ACCENT.purple, ACCENT.orange, ACCENT.cyan, ACCENT.blue].map(
                   (c, i) => (
                     <span
                       key={i}
-                      className="w-6 h-6 rounded-full border-2 border-white"
+                      className="w-5 sm:w-6 h-5 sm:h-6 rounded-full border-2 border-white"
                       style={{ background: c }}
                     />
                   )
@@ -281,14 +315,13 @@ export default function HeroSection() {
           </div>
 
           {/* ===== RIGHT – ECOSYSTEM ===== */}
-          <div className="flex-1 flex items-center justify-center w-full lg:w-auto">
+          <div className="flex-1 flex items-center justify-center w-full lg:w-auto mt-4 lg:mt-0">
             <div
               ref={ecosystemRef}
-              className="relative"
-              style={{ width: 480, height: 480 }}
+              className="relative w-[340px] h-[340px] xs:w-[380px] xs:h-[380px] sm:w-[440px] sm:h-[440px] md:w-[480px] md:h-[480px] mx-auto flex items-center justify-center"
             >
               {/* Responsive scaling wrapper */}
-              <div className="absolute inset-0 scale-[0.55] sm:scale-[0.7] md:scale-[0.85] lg:scale-100 origin-center transition-transform duration-300">
+              <div className="absolute inset-0 scale-[0.7] xs:scale-[0.8] sm:scale-[0.9] md:scale-100 origin-center transition-transform duration-300">
                 {/* SVG layer – orbital paths + connection lines */}
                 <svg
                   className="absolute inset-0 w-full h-full"
@@ -329,19 +362,18 @@ export default function HeroSection() {
                 {/* Center logo with glow */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                   <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center animate-glow"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center animate-glow bg-white p-2.5 shadow-2xl border border-purple-100/80"
                     style={{
-                      background: GRADIENT.purpleToBlue,
                       boxShadow:
-                        '0 0 30px rgba(108,76,241,0.35), 0 0 60px rgba(0,194,255,0.15)',
+                        '0 0 35px rgba(108,76,241,0.25), 0 0 60px rgba(0,194,255,0.15)',
                     }}
                   >
                     <Image
-                      src="/team/techades-logo.png"
-                      alt="Techades"
-                      width={48}
-                      height={48}
-                      className="rounded-full"
+                      src={getAssetPath('/team/techades-logo.png')}
+                      alt="Techades Official Logo"
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-contain"
                       priority
                     />
                   </div>
@@ -365,16 +397,18 @@ export default function HeroSection() {
                   />
                 ))}
 
-                {/* Avatar nodes */}
-                {avatarPositions.map((pos, i) => {
+                {/* Service nodes */}
+                {servicePositions.map((pos, i) => {
                   const ring = RINGS[pos.ring];
                   const delay = seededRandom(i * 17) * 5;
                   const duration = 4 + seededRandom(i * 7) * 3;
                   const rotDeg = seededRandom(i * 11) * 6 - 3;
+                  const iconSize = Math.round(ring.size * 0.46);
+                  const isHovered = hoveredService?.service.id === pos.service.id;
 
                   return (
                     <div
-                      key={pos.member.id}
+                      key={pos.service.id}
                       className="absolute z-10 group"
                       style={{
                         width: ring.size,
@@ -383,42 +417,44 @@ export default function HeroSection() {
                         left: `calc(50% + ${pos.x}px - ${ring.size / 2}px)`,
                         animation: `float-slow ${duration}s ease-in-out ${delay}s infinite`,
                       }}
-                      onMouseEnter={(e) => handleAvatarHover(pos, e)}
-                      onMouseLeave={() => setHoveredMember(null)}
+                      onMouseEnter={(e) => handleServiceSelect(pos, e)}
+                      onClick={(e) => handleServiceSelect(pos, e)}
                     >
-                      {/* Glow ring on hover */}
+                      {/* Glow ring on hover/tap */}
                       <div
-                        className="absolute -inset-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        className={`absolute -inset-1.5 rounded-full transition-opacity duration-300 ${
+                          isHovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        }`}
                         style={{
-                          background: `radial-gradient(circle, ${pos.member.color}44, transparent 70%)`,
+                          background: `radial-gradient(circle, ${pos.service.color}44, transparent 70%)`,
                         }}
                       />
 
-                      {/* Avatar circle */}
+                      {/* Service circle badge with actual Icon/Logo */}
                       <motion.div
-                        className="relative w-full h-full rounded-full flex items-center justify-center text-white font-bold cursor-pointer select-none"
+                        className="relative w-full h-full rounded-full flex items-center justify-center text-white cursor-pointer select-none"
                         style={{
-                          background: `linear-gradient(135deg, ${pos.member.color}, ${pos.member.color}cc)`,
-                          fontSize: ring.size * 0.32,
+                          background: `linear-gradient(135deg, ${pos.service.color}, ${pos.service.color}dd)`,
                           transform: `rotate(${rotDeg}deg)`,
-                          boxShadow: `0 2px 10px ${pos.member.color}33`,
+                          boxShadow: `0 2px 10px ${pos.service.color}33`,
                         }}
                         whileHover={{
                           scale: 1.35,
                           zIndex: 50,
                           rotate: 0,
-                          boxShadow: `0 4px 20px ${pos.member.color}55`,
+                          boxShadow: `0 4px 20px ${pos.service.color}55`,
                         }}
+                        whileTap={{ scale: 1.35 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                       >
-                        {getInitials(pos.member.name)}
+                        <RenderServiceIcon iconName={pos.service.icon} size={iconSize} />
                       </motion.div>
                     </div>
                   );
                 })}
 
                 {/* Tooltip */}
-                {hoveredMember && (
+                {hoveredService && (
                   <div
                     className="absolute z-50 pointer-events-none"
                     style={{
@@ -427,18 +463,21 @@ export default function HeroSection() {
                       transform: 'translateX(-50%)',
                     }}
                   >
-                    <div className="px-3 py-2 rounded-xl glass shadow-lg text-center whitespace-nowrap">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {hoveredMember.member.name}
+                    <div className="px-3 py-2 rounded-2xl bg-gray-900/95 text-white backdrop-blur-xl shadow-2xl border border-white/10 text-center max-w-[220px] sm:max-w-xs whitespace-normal">
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 text-[9px] sm:text-[10px] font-semibold tracking-wider uppercase mb-1">
+                        <RenderServiceIcon iconName={hoveredService.service.icon} size={11} />
+                        <span>{hoveredService.service.category}</span>
+                      </div>
+                      <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight leading-snug">
+                        {hoveredService.service.name}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {hoveredMember.member.role}
+                      <p className="text-[10px] sm:text-[11px] text-gray-300 mt-0.5 leading-normal">
+                        {hoveredService.service.description}
                       </p>
                     </div>
                     {/* Tooltip arrow */}
                     <div
-                      className="absolute left-1/2 -translate-x-1/2 top-full w-2.5 h-2.5 rotate-45 glass shadow-sm -mt-1"
-                      style={{ borderTop: 'none', borderRight: 'none' }}
+                      className="absolute left-1/2 -translate-x-1/2 top-full w-2.5 h-2.5 rotate-45 bg-gray-900/95 border-r border-b border-white/10 -mt-1"
                     />
                   </div>
                 )}

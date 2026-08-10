@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { getAssetPath } from "@/utils/basePath";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -18,7 +15,9 @@ export const metadata: Metadata = {
   description: "Meet the elite engineering collective behind Techades. 40+ specialists across technologies, industries, and locations building digital products that scale.",
   keywords: ["Techades", "Team", "Engineering", "Software Development", "Digital Products"],
   icons: {
-    icon: "/team/techades-logo.png",
+    icon: getAssetPath('/favicon.png'),
+    shortcut: getAssetPath('/favicon.png'),
+    apple: getAssetPath('/favicon.png'),
   },
 };
 
@@ -30,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-foreground`}
+        className={`${inter.variable} font-sans antialiased bg-white text-foreground`}
       >
         {children}
         <Toaster />

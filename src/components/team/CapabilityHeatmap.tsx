@@ -5,30 +5,45 @@ import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { capabilityRows, capabilityColumns, ACCENT } from './data';
+import { useScrollAnimation } from './useScrollAnimation';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-function getCellColor(value: number): string {
-  // 0 = very light, 8 = deep purple/blue
-  const colors = [
-    'rgba(108, 76, 241, 0.06)',  // 0
-    'rgba(108, 76, 241, 0.15)',  // 1
-    'rgba(108, 76, 241, 0.25)',  // 2
-    'rgba(108, 76, 241, 0.35)',  // 3
-    'rgba(108, 76, 241, 0.48)',  // 4
-    'rgba(90, 76, 210, 0.58)',   // 5
-    'rgba(75, 70, 200, 0.68)',   // 6
-    'rgba(63, 140, 255, 0.78)',  // 7
-    'rgba(50, 120, 240, 0.90)',  // 8
-  ];
-  return colors[value] || colors[0];
+function getCellStyle(value: number) {
+  if (value >= 7) {
+    return {
+      background: `linear-gradient(135deg, ${ACCENT.purple}, ${ACCENT.blue})`,
+      textColor: 'text-white font-bold',
+      shadow: 'shadow-sm shadow-purple-500/20',
+    };
+  }
+  if (value >= 5) {
+    return {
+      background: 'linear-gradient(135deg, rgba(108, 76, 241, 0.75), rgba(63, 140, 255, 0.65))',
+      textColor: 'text-white font-semibold',
+      shadow: 'shadow-xs',
+    };
+  }
+  if (value >= 3) {
+    return {
+      background: 'linear-gradient(135deg, rgba(108, 76, 241, 0.35), rgba(63, 140, 255, 0.25))',
+      textColor: 'text-purple-950 font-semibold',
+      shadow: 'none',
+    };
+  }
+  return {
+    background: 'rgba(108, 76, 241, 0.08)',
+    textColor: 'text-purple-800 font-medium',
+    shadow: 'none',
+  };
 }
 
 export default function CapabilityHeatmap() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const headingRef = useScrollAnimation({ y: 40, blur: 4, duration: 0.7 });
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
   const hasAnimated = useRef(false);
 
@@ -36,7 +51,7 @@ export default function CapabilityHeatmap() {
     if (!gridRef.current || !sectionRef.current) return;
 
     const cells = gridRef.current.querySelectorAll('.heatmap-cell');
-    gsap.set(cells, { opacity: 0, scaleX: 0 });
+    gsap.set(cells, { opacity: 0, scale: 0.85 });
 
     ScrollTrigger.create({
       trigger: sectionRef.current,
@@ -44,16 +59,12 @@ export default function CapabilityHeatmap() {
       onEnter: () => {
         if (hasAnimated.current) return;
         hasAnimated.current = true;
-        // Stagger by column: reveal each column's cells together
         gsap.to(cells, {
           opacity: 1,
-          scaleX: 1,
-          duration: 0.4,
-          stagger: {
-            each: 0.05,
-            from: 'start',
-          },
-          ease: 'power2.out',
+          scale: 1,
+          duration: 0.35,
+          stagger: 0.02,
+          ease: 'back.out(1.4)',
         });
       },
     });
@@ -65,114 +76,108 @@ export default function CapabilityHeatmap() {
     };
   }, []);
 
-  const handleCellHover = (e: React.MouseEvent, value: number) => {
+  const handleCellHover = (e: React.MouseEvent, value: number, skill: string, level: string) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setTooltip({
       x: rect.left + rect.width / 2,
       y: rect.top,
-      text: `${value} Specialist${value !== 1 ? 's' : ''}`,
+      text: `${skill} • ${level}: ${value} Specialist${value !== 1 ? 's' : ''}`,
     });
   };
 
   return (
-    <section ref={sectionRef} className="py-20 md:py-28 px-4 md:px-8">
-      <div className="max-w-5xl mx-auto">
+    <section ref={sectionRef} className="relative py-20 md:py-28 px-4 md:px-8 max-w-7xl mx-auto overflow-hidden">
+      {/* Background Soft Ambient Light Blobs */}
+      <div className="absolute top-1/4 -left-32 w-[400px] h-[400px] bg-purple-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 -right-32 w-[400px] h-[400px] bg-blue-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      <div className="max-w-4xl mx-auto">
         {/* Heading */}
-        <div className="text-center mb-12 md:mb-16">
-          <motion.h2
-            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="gradient-text">Capability Heatmap</span>
+        <div ref={headingRef} className="text-center mb-10 md:mb-14">
+          <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-3">
+            Capability <span className="gradient-text">Heatmap</span>
           </motion.h2>
-          <motion.p
-            className="text-muted-foreground text-lg md:text-xl"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            Our collective expertise across every level
-          </motion.p>
+          <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+            Our collective engineering depth and talent distribution across skill levels.
+          </p>
         </div>
 
-        {/* Heatmap Grid */}
-        <motion.div
-          ref={gridRef}
-          className="overflow-x-auto no-scrollbar"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className="min-w-[500px]">
+        {/* Heatmap Glass Box */}
+        <div className="relative rounded-3xl border border-gray-200/80 bg-white/80 backdrop-blur-xl p-4 sm:p-7 shadow-[0_4px_25px_rgba(0,0,0,0.03)] overflow-hidden">
+          {/* Top Sheen Line */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
+
+          {/* Grid Container */}
+          <div ref={gridRef} className="w-full">
             {/* Column Headers */}
-            <div className="flex items-center mb-3 pl-28 md:pl-32">
-              {capabilityColumns.map((col) => (
-                <div key={col} className="flex-1 text-center">
-                  <span className="text-xs md:text-sm font-medium text-muted-foreground">
-                    {col}
-                  </span>
-                </div>
-              ))}
+            <div className="flex items-center mb-3 pl-20 sm:pl-28">
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5 w-full">
+                {capabilityColumns.map((col) => (
+                  <div key={col} className="text-center">
+                    <span className="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      {col}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Rows */}
+            {/* Matrix Rows */}
             <div className="flex flex-col gap-2">
               {capabilityRows.map((row) => (
-                <div key={row.skill} className="flex items-center">
+                <div key={row.skill} className="flex items-center gap-2 sm:gap-3">
                   {/* Row Label */}
-                  <div className="w-28 md:w-32 flex-shrink-0 text-right pr-4">
-                    <span className="text-sm md:text-base font-medium text-foreground">
+                  <div className="w-20 sm:w-28 flex-shrink-0 text-right pr-1 sm:pr-2">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-800 truncate block">
                       {row.skill}
                     </span>
                   </div>
 
-                  {/* Cells */}
-                  <div className="flex-1 flex gap-1.5">
-                    {row.levels.map((value, ci) => (
-                      <div
-                        key={ci}
-                        className="heatmap-cell flex-1 aspect-square rounded-md cursor-pointer transition-all duration-200 hover:scale-110 hover:ring-2 hover:ring-offset-1"
-                        style={{
-                          background: getCellColor(value),
-                          ringColor: ACCENT.purple,
-                          minWidth: 0,
-                        }}
-                        onMouseEnter={(e) => handleCellHover(e, value)}
-                        onMouseLeave={() => setTooltip(null)}
-                      />
-                    ))}
+                  {/* Level Cells */}
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5 flex-1">
+                    {row.levels.map((value, ci) => {
+                      const style = getCellStyle(value);
+                      return (
+                        <div
+                          key={ci}
+                          className={`heatmap-cell h-8 sm:h-9 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-md flex items-center justify-center border border-white/60 ${style.textColor} ${style.shadow}`}
+                          style={{
+                            background: style.background,
+                          }}
+                          onMouseEnter={(e) => handleCellHover(e, value, row.skill, capabilityColumns[ci])}
+                          onMouseLeave={() => setTooltip(null)}
+                        >
+                          <span className="text-xs sm:text-sm">{value}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <span className="text-xs text-muted-foreground mr-2">Less</span>
-              {[0, 2, 4, 6, 8].map((v) => (
-                <div
-                  key={v}
-                  className="w-5 h-5 rounded-sm"
-                  style={{ background: getCellColor(v) }}
-                />
-              ))}
-              <span className="text-xs text-muted-foreground ml-2">More</span>
+            {/* Modern Heatmap Spectrum Legend */}
+            <div className="flex items-center justify-between mt-6 pt-5 border-t border-gray-100/80 px-1 sm:px-3 text-xs text-gray-500">
+              <span className="font-medium text-[11px] sm:text-xs text-gray-400">Team Density:</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-[10px] sm:text-xs">Low (1-2)</span>
+                <div className="w-4 h-4 rounded-md bg-[rgba(108,76,241,0.08)] border border-purple-100" />
+                <div className="w-4 h-4 rounded-md bg-[rgba(108,76,241,0.35)]" />
+                <div className="w-4 h-4 rounded-md bg-[rgba(108,76,241,0.75)]" />
+                <div className="w-4 h-4 rounded-md bg-gradient-to-r from-[#6C4CF1] to-[#3F8CFF] shadow-xs" />
+                <span className="text-[10px] sm:text-xs">High (7-8+)</span>
+              </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Tooltip */}
+        {/* Hover Tooltip */}
         {tooltip && (
           <div
-            className="fixed z-50 px-3 py-1.5 rounded-lg glass shadow-lg text-sm font-medium text-foreground pointer-events-none"
+            className="fixed z-50 px-3 py-1.5 rounded-xl bg-gray-900/90 text-white backdrop-blur-md shadow-xl text-xs font-semibold pointer-events-none"
             style={{
               left: tooltip.x,
-              top: tooltip.y - 40,
+              top: tooltip.y - 36,
               transform: 'translateX(-50%)',
             }}
           >

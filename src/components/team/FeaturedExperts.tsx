@@ -1,277 +1,185 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Star, ChevronLeft, ChevronRight, Briefcase, Clock } from 'lucide-react';
-import { featuredExperts, GRADIENT, ACCENT } from './data';
+import { Star, Sparkles, Award, Linkedin, Mail, Quote } from 'lucide-react';
+import { featuredExperts } from './data';
 import { useScrollAnimation } from './useScrollAnimation';
 
-function DotButton({
-  index,
-  selectedIndex,
-  onClick,
-}: {
-  index: number;
-  selectedIndex: number;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`transition-all duration-300 rounded-full ${
-        index === selectedIndex
-          ? 'w-8 h-2.5'
-          : 'w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400'
-      }`}
-      style={
-        index === selectedIndex
-          ? { background: GRADIENT.purpleToOrange }
-          : undefined
-      }
-      aria-label={`Go to slide ${index + 1}`}
-    />
-  );
-}
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => {
-        const fill = Math.min(Math.max(rating - (star - 1), 0), 1);
-        return (
-          <div key={star} className="relative w-4 h-4">
-            <Star className="w-4 h-4 text-gray-200" strokeWidth={1.5} />
-            <div
-              className="absolute inset-0 overflow-hidden"
-              style={{ width: `${fill * 100}%` }}
-            >
-              <Star
-                className="w-4 h-4"
-                style={{ color: ACCENT.orange }}
-                fill={ACCENT.orange}
-                strokeWidth={1.5}
-              />
-            </div>
-          </div>
-        );
-      })}
-      <span className="ml-1.5 text-sm font-semibold text-gray-700">
-        {rating.toFixed(1)}
-      </span>
-    </div>
-  );
-}
-
-function FeaturedCard({
-  expert,
-}: {
-  expert: (typeof featuredExperts)[0];
-}) {
-  const [hovered, setHovered] = useState(false);
-  const initials = expert.name
+function getInitials(name: string) {
+  return name
     .split(' ')
     .map((n) => n[0])
     .join('');
-
-  return (
-    <motion.div
-      className="min-w-[340px] sm:min-w-[400px] flex-shrink-0"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      whileHover={{ y: -8 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-    >
-      <div className="gradient-border overflow-hidden rounded-3xl bg-white p-1">
-        <div className="rounded-[22px] overflow-hidden bg-white p-5 sm:p-6">
-          <div className="flex gap-5 sm:gap-6">
-            {/* Photo */}
-            <div className="relative flex-shrink-0 w-[120px] h-[140px] sm:w-[140px] sm:h-[160px] rounded-2xl overflow-hidden">
-              <motion.div
-                className="absolute inset-0"
-                animate={{ scale: hovered ? 1.08 : 1 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-              >
-                <Image
-                  src={expert.image}
-                  alt={expert.name}
-                  fill
-                  className="object-cover"
-                  sizes="140px"
-                  priority
-                />
-              </motion.div>
-              {/* Fallback initials overlay if image fails */}
-              <div
-                className="absolute inset-0 flex items-center justify-center text-white font-bold text-2xl -z-10"
-                style={{ background: GRADIENT.purpleToBlue }}
-              >
-                {initials}
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="flex flex-col justify-between flex-1 min-w-0 py-0.5">
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">
-                  {expert.name}
-                </h3>
-                <p
-                  className="text-sm font-semibold mt-0.5"
-                  style={{ color: expert.color }}
-                >
-                  {expert.role}
-                </p>
-                <p className="text-xs text-gray-500 mt-1.5 leading-relaxed line-clamp-2">
-                  {expert.bio}
-                </p>
-              </div>
-
-              {/* Rating */}
-              <div className="mt-2">
-                <StarRating rating={expert.rating} />
-              </div>
-
-              {/* Meta */}
-              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {expert.yearsExp}+ yrs
-                </span>
-                <span className="flex items-center gap-1">
-                  <Briefcase className="w-3.5 h-3.5" />
-                  {expert.projects} projects
-                </span>
-              </div>
-
-              {/* Skill Tags */}
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {expert.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="inline-flex items-center px-2.5 py-1 text-[11px] font-medium rounded-full bg-gray-50 text-gray-600 border border-gray-100"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
 }
 
+const founder = featuredExperts[0];
+const keyTeam = featuredExperts.slice(1);
+
 export default function FeaturedExperts() {
-  const headingRef = useScrollAnimation({ y: 40, blur: 4, duration: 0.7 });
-  const carouselRef = useScrollAnimation({
-    y: 60,
-    blur: 6,
-    duration: 0.9,
-    delay: 0.15,
-  });
-
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: 'start',
-    slidesToScroll: 1,
-    containScroll: 'trimSnaps',
-    dragFree: true,
-  });
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(true);
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
-  const scrollTo = useCallback(
-    (index: number) => {
-      if (emblaApi) emblaApi.scrollTo(index);
-    },
-    [emblaApi]
-  );
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-    setCanScrollPrev(emblaApi.canScrollPrev());
-    setCanScrollNext(emblaApi.canScrollNext());
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
-    return () => {
-      emblaApi.off('select', onSelect);
-    };
-  }, [emblaApi, onSelect]);
+  const headingRef = useScrollAnimation({ y: 30, blur: 4, duration: 0.7 });
 
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Section Header */}
-      <div ref={headingRef} className="text-center mb-12 sm:mb-16">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-          Featured{' '}
-          <span className="gradient-text">Experts</span>
+    <section className="relative py-14 sm:py-24 md:py-28 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+      {/* Background Soft Ambient Light Orbs */}
+      <div className="absolute top-1/4 -left-32 w-[450px] h-[450px] bg-gradient-to-tr from-purple-400/15 via-indigo-300/10 to-pink-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 -right-32 w-[450px] h-[450px] bg-gradient-to-bl from-cyan-400/15 via-blue-300/10 to-purple-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      {/* Header */}
+      <div ref={headingRef} className="text-center mb-10 sm:mb-14">
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-50/80 border border-purple-200/50 text-purple-700 text-[11px] sm:text-xs font-medium tracking-wide mb-3 shadow-xs">
+          <Sparkles size={13} className="text-purple-600" />
+          <span>Executive Leadership</span>
+        </div>
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900">
+          Meet Our <span className="gradient-text">Leadership</span>
         </h2>
-        <p className="mt-4 text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          The leadership driving our engineering excellence
+        <p className="mt-3 text-gray-500 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
+          Driven by vision, technical mastery, and a relentless focus on shipping production-grade software.
         </p>
       </div>
 
-      {/* Carousel Container */}
-      <div ref={carouselRef}>
-        <div className="relative">
-          {/* Navigation Buttons */}
-          <div className="flex items-center justify-end gap-2 mb-5">
-            <button
-              onClick={scrollPrev}
-              disabled={!canScrollPrev}
-              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center transition-all duration-200 hover:border-gray-300 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <button
-              onClick={scrollNext}
-              disabled={!canScrollNext}
-              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center transition-all duration-200 hover:border-gray-300 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
+      {/* Large Founder + Executive Team Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
+        {/* Left Column: Large Hero Founder Card (Spans 7 cols on Desktop) */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="lg:col-span-7 group relative rounded-[2rem] bg-white/85 backdrop-blur-xl border border-gray-200/80 p-6 sm:p-8 md:p-10 shadow-xl hover:shadow-2xl hover:border-purple-300 transition-all duration-500 flex flex-col justify-between overflow-hidden"
+        >
+          {/* Top Glass Sheen */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-300/50 to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Embla Viewport */}
-          <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
-            <div className="flex gap-6">
-              {featuredExperts.map((expert) => (
-                <div key={expert.id} className="flex-[0_0_auto]">
-                  <FeaturedCard expert={expert} />
+          {/* Founder Header Row */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
+              <div className="flex items-center gap-4">
+                {/* Founder Gradient Avatar Placeholder */}
+                <div
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-md flex-shrink-0 group-hover:scale-105 transition-transform duration-300"
+                  style={{
+                    background: `linear-gradient(135deg, ${founder.color}, ${founder.color}AA)`,
+                  }}
+                >
+                  {getInitials(founder.name)}
                 </div>
+
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-100/70 text-purple-700 text-[11px] font-semibold mb-1">
+                    <Award size={12} />
+                    <span>Founder & CEO</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                    {founder.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    18+ Years Engineering Leadership • 150+ Scale Projects
+                  </p>
+                </div>
+              </div>
+
+              {/* Star Rating Badge */}
+              <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+                <Star size={16} fill="#F59E0B" className="text-amber-500" />
+                <span className="text-sm font-bold text-amber-900">5.0</span>
+                <span className="text-xs font-medium text-amber-700">Rating</span>
+              </div>
+            </div>
+
+            {/* Founder Quote & Bio */}
+            <div className="relative my-6 p-5 sm:p-6 rounded-2xl bg-purple-50/40 border border-purple-100/70">
+              <Quote size={24} className="text-purple-300 absolute top-4 right-4" />
+              <p className="text-gray-700 text-sm sm:text-base font-medium leading-relaxed italic relative z-10">
+                "{founder.bio} Building scalable architectures and guiding talented cross-functional teams to redefine digital engineering standards."
+              </p>
+            </div>
+
+            {/* Core Skills Chips */}
+            <div className="flex flex-wrap gap-2 my-6">
+              {founder.skills.map((skill) => (
+                <span
+                  key={skill}
+                  className="px-3 py-1 text-xs font-semibold rounded-full bg-white border border-gray-200 text-gray-700 shadow-2xs"
+                >
+                  {skill}
+                </span>
               ))}
             </div>
           </div>
 
-          {/* Dot Indicators */}
-          <div className="flex items-center justify-center gap-2 mt-8">
-            {featuredExperts.map((_, index) => (
-              <DotButton
-                key={index}
-                index={index}
-                selectedIndex={selectedIndex}
-                onClick={() => scrollTo(index)}
-              />
-            ))}
+          {/* Founder Footer Row: Social Links */}
+          <div className="pt-5 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Executive Spotlight
+            </span>
+            <div className="flex items-center gap-2">
+              <button className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors cursor-pointer">
+                <Linkedin size={14} />
+              </button>
+              <button className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors cursor-pointer">
+                <Mail size={14} />
+              </button>
+            </div>
           </div>
+        </motion.div>
+
+        {/* Right Column: Stacked Executive Leaders Cards (Spans 5 cols on Desktop) */}
+        <div className="lg:col-span-5 flex flex-col justify-between gap-4 sm:gap-5">
+          {keyTeam.map((expert, index) => {
+            return (
+              <motion.div
+                key={expert.id}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group relative rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/80 p-5 shadow-sm hover:shadow-lg hover:border-purple-300 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+              >
+                <div className="flex items-start gap-4">
+                  {/* Avatar Gradient Placeholder */}
+                  <div
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform duration-300"
+                    style={{
+                      background: `linear-gradient(135deg, ${expert.color}, ${expert.color}AA)`,
+                    }}
+                  >
+                    {getInitials(expert.name)}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-base font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
+                        {expert.name}
+                      </h4>
+                      <div className="flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
+                        <Star size={12} fill="#F59E0B" />
+                        <span>{expert.rating.toFixed(1)}</span>
+                      </div>
+                    </div>
+
+                    <p
+                      className="text-xs font-semibold mt-0.5 truncate"
+                      style={{ color: expert.color }}
+                    >
+                      {expert.role}
+                    </p>
+
+                    <p className="text-xs text-gray-500 mt-1.5 leading-snug line-clamp-2">
+                      {expert.bio}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-[11px] text-gray-400 font-medium mt-2.5">
+                      <span>{expert.yearsExp}+ Yrs Exp</span>
+                      <span className="w-1 h-1 rounded-full bg-gray-300" />
+                      <span>{expert.projects} Projects</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

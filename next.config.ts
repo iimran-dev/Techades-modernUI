@@ -1,12 +1,20 @@
-import type { NextConfig } from "next";
+const basePath = '/techades-app';
 
-const nextConfig: NextConfig = {
-  output: "standalone",
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  basePath,
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
+  },
+  reactStrictMode: false,
+  images: {
+    unoptimized: true,
+  },
+  output: 'export',
   typescript: {
     ignoreBuildErrors: true,
   },
-  reactStrictMode: false,
+  devIndicators: false
 };
 
 export default nextConfig;

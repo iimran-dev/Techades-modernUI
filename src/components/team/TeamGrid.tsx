@@ -1,21 +1,10 @@
 'use client';
 
-import { useState, useCallback, useRef, MouseEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Linkedin, Mail, ChevronDown, Users } from 'lucide-react';
-import { teamMembers, ACCENT } from './data';
+import { useState } from 'react';
+import { motion,  } from 'framer-motion';
+import { Linkedin, Mail,  ArrowUpRight, Sparkles } from 'lucide-react';
+import { teamMembers } from './data';
 import { useScrollAnimation } from './useScrollAnimation';
-
-const INITIAL_COUNT = 8;
-
-const skillBadgeColors = [
-  'bg-purple-50 text-purple-700 border-purple-100',
-  'bg-blue-50 text-blue-700 border-blue-100',
-  'bg-cyan-50 text-cyan-700 border-cyan-100',
-  'bg-orange-50 text-orange-700 border-orange-100',
-  'bg-emerald-50 text-emerald-700 border-emerald-100',
-  'bg-pink-50 text-pink-700 border-pink-100',
-];
 
 function getInitials(name: string) {
   return name
@@ -24,130 +13,94 @@ function getInitials(name: string) {
     .join('');
 }
 
-function TeamCard({
+function EditorialTeamCard({
   member,
   index,
 }: {
   member: (typeof teamMembers)[0];
   index: number;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [tiltStyle, setTiltStyle] = useState({ rotateX: 0, rotateY: 0 });
   const initials = getInitials(member.name);
-
-  const handleMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    const rotateX = (y - 0.5) * -8;
-    const rotateY = (x - 0.5) * 8;
-    setTiltStyle({ rotateX, rotateY });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setTiltStyle({ rotateX: 0, rotateY: 0 });
-  }, []);
-
+  const formattedIndex = String(index + 1).padStart(2, '0');
   const visibleSkills = member.skills.slice(0, 3);
-  const moreCount = member.skills.length - 3;
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      transition={{
-        duration: 0.45,
-        delay: index * 0.04,
-        ease: [0.22, 1, 0.36, 1],
-      }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4, delay: index * 0.04 }}
+      className="group relative rounded-xl sm:rounded-2xl bg-white/85 backdrop-blur-xl border border-gray-200/70 p-3.5 sm:p-4.5 shadow-xs hover:shadow-lg hover:border-purple-300 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer hover:-translate-y-0.5"
     >
-      <div
-        ref={cardRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="gradient-border group relative rounded-2xl bg-white p-4 sm:p-5 cursor-default"
-        style={{
-          perspective: '800px',
-          transform: `rotateX(${tiltStyle.rotateX}deg) rotateY(${tiltStyle.rotateY}deg)`,
-          transition: 'transform 0.2s ease-out',
-        }}
-      >
-        {/* Top row: Avatar + Name + Social icons */}
-        <div className="flex items-start gap-3.5">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <div
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl transition-transform duration-500 group-hover:scale-110 shadow-md"
-              style={{
-                background: `linear-gradient(135deg, ${member.color}, ${member.color}99)`,
-              }}
-            >
-              {initials}
-            </div>
-            {/* Subtle ring glow on hover */}
-            <div
-              className="absolute -inset-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
-              style={{
-                background: `radial-gradient(circle, ${member.color}33, transparent 70%)`,
-              }}
-            />
-          </div>
+      {/* Top Editorial Bar: Number Index & Location */}
+      <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2.5">
+        <span className="text-[11px] sm:text-xs font-mono font-semibold text-gray-400 group-hover:text-purple-600 transition-colors">
+          // {formattedIndex}
+        </span>
+        <span className="text-[10px] sm:text-xs font-medium text-gray-500 bg-gray-100/70 px-2 py-0.5 rounded-full border border-gray-200/50 truncate max-w-[90px] sm:max-w-none">
+          {member.location}
+        </span>
+      </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight truncate">
-                  {member.name}
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
-                  {member.role}
-                </p>
-              </div>
-              {/* Social Icons */}
-              <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
-                <button
-                  className="w-7 h-7 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#0A66C2] hover:border-[#0A66C2]/30 hover:bg-blue-50 transition-all duration-200"
-                  aria-label={`${member.name} LinkedIn`}
-                >
-                  <Linkedin className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  className="w-7 h-7 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[ACCENT.purple] hover:border-purple-200 hover:bg-purple-50 transition-all duration-200"
-                  aria-label={`Email ${member.name}`}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
+      {/* Avatar & Member Info */}
+      <div>
+        <div className="flex items-center gap-2.5 sm:gap-3 mb-2.5">
+          <div
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-2xs group-hover:scale-105 transition-transform duration-300 flex-shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${member.color}, ${member.color}DD)`,
+            }}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs sm:text-sm font-bold text-gray-900 tracking-tight group-hover:text-purple-700 transition-colors truncate">
+              {member.name}
+            </h3>
+            <p className="text-[10px] sm:text-xs font-semibold text-purple-600 uppercase tracking-wider truncate mt-0.5">
+              {member.role}
+            </p>
           </div>
         </div>
 
-        {/* Years + Projects */}
-        <div className="flex items-center gap-3 mt-3 text-xs text-gray-400">
-          <span className="font-medium">{member.yearsExp}+ yrs exp</span>
+        {/* Experience & Projects Bar */}
+        <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-gray-500 font-medium mb-2.5">
+          <span>{member.yearsExp}+ Yrs</span>
           <span className="w-1 h-1 rounded-full bg-gray-300" />
-          <span className="font-medium">{member.projects} projects</span>
+          <span>{member.projects} Proj</span>
         </div>
 
         {/* Skill Badges */}
-        <div className="flex flex-wrap gap-1.5 mt-3">
-          {visibleSkills.map((skill, i) => (
+        <div className="flex flex-wrap items-center gap-1 mb-1">
+          {visibleSkills.map((skill) => (
             <span
               key={skill}
-              className={`inline-block px-2 py-0.5 text-[10px] sm:text-[11px] font-medium rounded-full border ${skillBadgeColors[i % skillBadgeColors.length]}`}
+              className="px-2 py-0.5 text-[9px] sm:text-[10px] font-medium rounded-full bg-gray-50 text-gray-700 border border-gray-200/60"
             >
               {skill}
             </span>
           ))}
-          {moreCount > 0 && (
-            <span className="inline-block px-2 py-0.5 text-[10px] sm:text-[11px] font-medium rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-              +{moreCount} more
-            </span>
-          )}
+        </div>
+      </div>
+
+      {/* Editorial Card Footer: Social Connections */}
+      <div className="pt-2 mt-3 border-t border-gray-100 flex items-center justify-between">
+        <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-gray-400 truncate">
+          Specialist
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            className="w-6 h-6 rounded-full bg-gray-50 border border-gray-200/70 flex items-center justify-center text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition-all cursor-pointer"
+            aria-label={`${member.name} LinkedIn`}
+          >
+            <Linkedin size={12} />
+          </button>
+          <button
+            className="w-6 h-6 rounded-full bg-gray-50 border border-gray-200/70 flex items-center justify-center text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition-all cursor-pointer"
+            aria-label={`Email ${member.name}`}
+          >
+            <Mail size={12} />
+          </button>
         </div>
       </div>
     </motion.div>
@@ -155,78 +108,53 @@ function TeamCard({
 }
 
 export default function TeamGrid() {
-  const [expanded, setExpanded] = useState(false);
-  const headingRef = useScrollAnimation({ y: 40, blur: 4, duration: 0.7 });
-  const gridRef = useScrollAnimation({ y: 50, blur: 4, duration: 0.8, delay: 0.1 });
-  const btnRef = useScrollAnimation({ y: 30, opacity: 0, duration: 0.6, delay: 0.25 });
+  const headingRef = useScrollAnimation({ y: 30, blur: 4, duration: 0.7 });
+  const [showAll, setShowAll] = useState(false);
 
-  const visibleMembers = expanded
-    ? teamMembers
-    : teamMembers.slice(0, INITIAL_COUNT);
-
-  const toggleExpanded = () => {
-    setExpanded((prev) => !prev);
-  };
+  const displayedMembers = showAll ? teamMembers.slice(0, 12) : teamMembers.slice(0, 3);
 
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Section Header */}
-      <div ref={headingRef} className="text-center mb-12 sm:mb-14">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-50 border border-purple-100 mb-5">
-          <Users className="w-4 h-4" style={{ color: ACCENT.purple }} />
-          <span className="text-sm font-medium" style={{ color: ACCENT.purple }}>
-            40+ Specialists
-          </span>
+    <section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden my-4 sm:my-8">
+      {/* Soft Ambient Light Blobs */}
+      <div className="absolute top-1/4 -left-32 w-[350px] sm:w-[450px] h-[350px] sm:h-[450px] bg-gradient-to-tr from-purple-400/10 via-indigo-300/10 to-pink-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 -right-32 w-[350px] sm:w-[450px] h-[350px] sm:h-[450px] bg-gradient-to-bl from-cyan-400/10 via-blue-300/10 to-purple-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      {/* Header */}
+      <div ref={headingRef} className="text-center mb-10 sm:mb-14">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50/80 border border-purple-200/50 text-purple-700 text-[10px] sm:text-xs font-medium tracking-wide mb-2.5 shadow-2xs">
+          <Sparkles size={12} className="text-purple-600" />
+          <span>Editorial Roster // 2026 Edition</span>
         </div>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-          Meet The{' '}
-          <span className="gradient-text">Collective</span>
-        </h2>
-        <p className="mt-4 text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          A diverse team of engineers, designers, and strategists united by
-          a passion for building exceptional digital products.
+        <motion.h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-2 sm:mb-3 text-gray-900">
+          The <span className="gradient-text">Collective</span> Studio
+        </motion.h2>
+        <p className="text-gray-500 text-xs sm:text-base max-w-xl mx-auto leading-relaxed px-1 font-normal">
+          An elite group of fullstack engineers, design directors, and systems architects crafting world-class digital products.
         </p>
       </div>
 
-      {/* Grid */}
-      <div ref={gridRef}>
-        <motion.div
-          layout
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5"
-          transition={{
-            layoutDuration: 0.5,
-            staggerChildren: 0.04,
-          }}
-        >
-          <AnimatePresence mode="popLayout">
-            {visibleMembers.map((member, index) => (
-              <TeamCard
-                key={member.id}
-                member={member}
-                index={expanded && index >= INITIAL_COUNT ? index - INITIAL_COUNT : index}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
+      {/* Editorial Grid (3 Primary Cards by Default) */}
+      <div
+        className={`grid gap-3.5 sm:gap-5 ${
+          showAll
+            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+            : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-5xl mx-auto'
+        }`}
+      >
+        {displayedMembers.map((member, index) => (
+          <EditorialTeamCard key={member.id} member={member} index={index} />
+        ))}
       </div>
 
-      {/* View All / Show Less Button */}
-      <div ref={btnRef} className="flex justify-center mt-10 sm:mt-12">
-        <motion.button
-          onClick={toggleExpanded}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full text-sm font-semibold text-white shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-shadow duration-300"
-          style={{ background: `linear-gradient(135deg, ${ACCENT.purple}, ${ACCENT.orange})` }}
+      {/* Toggle View Button */}
+      <div className="mt-10 text-center">
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/80 backdrop-blur-md border border-gray-200/80 text-gray-800 text-xs font-semibold hover:border-purple-300 hover:text-purple-700 hover:shadow-sm transition-all cursor-pointer"
         >
-          {expanded ? 'Show Less' : `View All ${teamMembers.length} Experts`}
-          <motion.span
-            animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ChevronDown className="w-4 h-4" />
-          </motion.span>
-        </motion.button>
+          <span>{showAll ? 'Show Featured Roster' : 'Explore Full Roster'}</span>
+          <ArrowUpRight size={13} />
+        </button>
       </div>
     </section>
   );

@@ -1,62 +1,80 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Code, GitCommit, Rocket, Video, Coffee, Moon,
-  Github, Linkedin, Twitter, Mail, ArrowRight,
+  Github, Linkedin, Twitter, Mail, ArrowRight, Sparkles, ShieldCheck, Award, CheckCircle2, BadgeCheck
 } from 'lucide-react';
-import { certifications, funStats, ACCENT, GRADIENT } from './data';
 import { useCountUp, useScrollAnimation } from './useScrollAnimation';
 import type { LucideIcon } from 'lucide-react';
+import { getAssetPath } from '@/utils/basePath';
 
-// ─── ICON MAP ────────────────────────────────────────────
+// Icon Map for Stats
 const iconMap: Record<string, LucideIcon> = {
   Code, GitCommit, Rocket, Video, Coffee, Moon,
 };
 
+// Enterprise Compliance & Specializations (Replaces fake logos & boxed cards)
+const trustBadges = [
+  { name: 'Microsoft Enterprise Partner', status: 'Certified Tier', color: '#00A4EF' },
+  { name: 'AWS Cloud Solutions Partner', status: 'Select Tier', color: '#FF9900' },
+  { name: 'Google Cloud Platform', status: 'Certified Partner', color: '#4285F4' },
+  { name: 'ISO 27001 Security Standard', status: 'Audited & Verified', color: '#10B981' },
+  { name: 'SOC 2 Type II Compliant', status: 'Audited 2026', color: '#8B5CF6' },
+  { name: 'HIPAA & PCI-DSS L1', status: 'Level 1 Compliant', color: '#EC4899' },
+  { name: 'Oracle Enterprise Stack', status: 'Certified Specialist', color: '#F80000' },
+  { name: 'Scrum Alliance Agile Firm', status: 'Certified Practice', color: '#06B6D4' },
+];
+
 // ═══════════════════════════════════════════════════════════
-// 5a. CERTIFICATIONS
+// 1. CERTIFICATIONS & TRUST BADGES (Ecosystem Ribbon)
 // ═══════════════════════════════════════════════════════════
 export function Certifications() {
-  const ref = useScrollAnimation({ stagger: 0.08, y: 30, blur: 4 });
+  const headingRef = useScrollAnimation({ y: 30, blur: 4 });
 
   return (
-    <section className="py-20 md:py-28 px-4 md:px-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          <motion.h2
-            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="gradient-text">Certifications & Partnerships</span>
+    <section className="relative py-14 sm:py-20 md:py-24 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div ref={headingRef} className="text-center mb-10 sm:mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50/80 border border-purple-200/50 text-purple-700 text-[11px] sm:text-xs font-medium tracking-wide mb-3 shadow-xs">
+            <ShieldCheck size={13} className="text-purple-600" />
+            <span>Verified Industry Compliance</span>
+          </div>
+          <motion.h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+            Standards & <span className="gradient-text">Certifications</span>
           </motion.h2>
+          <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-normal">
+            Enterprise-grade security standards and multi-cloud certified engineering practices.
+          </p>
         </div>
 
-        <div ref={ref} className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
-          {certifications.map((cert) => (
+        {/* Seamless Glass Pill Ribbon (No Box Cards or Logos) */}
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+          {trustBadges.map((badge, i) => (
             <motion.div
-              key={cert.name}
-              className="relative rounded-2xl bg-white border border-slate-200/60 shadow-sm p-6 md:p-8 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:scale-105 hover:shadow-lg group cursor-pointer"
-              whileHover={{ y: -4 }}
+              key={badge.name}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              className="group relative rounded-full bg-white/80 backdrop-blur-md border border-gray-200/70 px-4 sm:px-5 py-2.5 shadow-xs hover:shadow-md hover:border-purple-300 transition-all duration-300 flex items-center gap-2.5 cursor-pointer"
             >
               <div
-                className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center font-bold text-white text-lg md:text-xl shadow-sm transition-all duration-300"
-                style={{
-                  background: `linear-gradient(135deg, ${cert.color}, ${cert.color}99)`,
-                  boxShadow: `0 4px 20px ${cert.color}30`,
-                }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 shadow-xs group-hover:scale-110 transition-transform"
+                style={{ background: badge.color }}
               >
-                {cert.name.charAt(0)}
+                <BadgeCheck size={15} />
               </div>
-              <span
-                className="text-sm md:text-base font-semibold transition-colors duration-300 group-hover:text-foreground"
-                style={{ color: cert.color }}
-              >
-                {cert.name}
-              </span>
+              <div className="flex flex-col">
+                <span className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">
+                  {badge.name}
+                </span>
+                <span className="text-[10px] font-normal text-gray-400">
+                  {badge.status}
+                </span>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -65,236 +83,93 @@ export function Certifications() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// 5b. FUN IMPACT COUNTER
-// ═══════════════════════════════════════════════════════════
-function CounterCard({ stat, index }: { stat: typeof funStats[number]; index: number }) {
-  const counterRef = useCountUp(stat.value, 2.5);
-  const Icon = iconMap[stat.icon] || Code;
-
-  return (
-    <motion.div
-      className="relative rounded-2xl bg-white border border-slate-200/60 shadow-sm p-5 md:p-6 overflow-hidden transition-shadow hover:shadow-lg"
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1, type: 'spring', stiffness: 120 }}
-    >
-      {/* Colored left border accent */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1.5 rounded-r-full"
-        style={{ background: `linear-gradient(180deg, ${stat.color}, ${stat.color}66)` }}
-      />
-
-      <div className="flex items-start gap-4 pl-3">
-        <motion.div
-          className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: `${stat.color}12` }}
-          initial={{ scale: 0 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{
-            duration: 0.4,
-            delay: index * 0.1 + 0.15,
-            type: 'spring',
-            stiffness: 300,
-            damping: 8,
-          }}
-        >
-          <Icon size={20} style={{ color: stat.color }} />
-        </motion.div>
-
-        <div className="min-w-0">
-          <div className="flex items-baseline gap-1.5">
-            <span
-              ref={counterRef}
-              className="text-2xl md:text-3xl font-bold tabular-nums"
-              style={{ color: stat.color }}
-            >
-              0
-            </span>
-            <span className="text-lg md:text-xl font-bold text-muted-foreground">
-              {stat.suffix}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 truncate">{stat.label}</p>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-export function FunCounter() {
-  return (
-    <section className="py-20 md:py-28 px-4 md:px-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          <motion.h2
-            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="gradient-text">Our Impact In Numbers</span>
-          </motion.h2>
-          <motion.p
-            className="text-muted-foreground text-lg md:text-xl"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            The energy behind every project
-          </motion.p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-          {funStats.map((stat, i) => (
-            <CounterCard key={stat.label} stat={stat} index={i} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════
-// 5c. CTA SECTION
+// 3. ULTRA MODERN GLASS CTA SECTION
 // ═══════════════════════════════════════════════════════════
 export function CTASection() {
   return (
-    <section className="relative py-20 md:py-28 px-4 md:px-8 overflow-hidden">
-      {/* Gradient background */}
-      <div
-        className="absolute inset-0"
-        style={{ background: GRADIENT.purpleToOrange }}
-      />
+    <section className="relative py-14 sm:py-20 md:py-24 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+      <div className="relative max-w-6xl mx-auto rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#1E1B4B] to-[#311042] text-white p-8 sm:p-14 md:p-16 overflow-hidden shadow-2xl border border-white/10">
+        {/* Soft Background Orbs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Network lines pattern SVG */}
-      <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="ctaGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#ctaGrid)" />
-      </svg>
+        {/* Subtle Mesh Overlay */}
+        <svg className="absolute inset-0 w-full h-full opacity-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="ctaGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#ctaGrid)" />
+        </svg>
 
-      {/* Floating particles */}
-      {[...Array(8)].map((_, i) => (
-        <span
-          key={i}
-          className="absolute w-2 h-2 rounded-full bg-white/20 animate-particle"
-          style={{
-            left: `${10 + i * 12}%`,
-            top: `${20 + (i % 3) * 25}%`,
-            animationDelay: `${i * 0.8}s`,
-            animationDuration: `${6 + (i % 3) * 2}s`,
-          }}
-        />
-      ))}
-
-      {/* Floating avatar circles */}
-      {[...Array(5)].map((_, i) => {
-        const colors = [ACCENT.purple, ACCENT.blue, ACCENT.cyan, ACCENT.orange, '#EC4899'];
-        const initials = ['AM', 'RK', 'AI', 'PS', 'VD'];
-        return (
-          <span
-            key={`avatar-${i}`}
-            className="absolute w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold text-white/60 animate-float"
-            style={{
-              left: `${8 + i * 22}%`,
-              top: `${15 + (i % 2) * 55}%`,
-              background: `linear-gradient(135deg, ${colors[i]}, ${colors[(i + 1) % colors.length]}88)`,
-              animationDelay: `${i * 0.6}s`,
-              animationDuration: `${4 + i * 0.5}s`,
-            }}
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-purple-200 text-xs font-medium tracking-wide mb-6 backdrop-blur-md"
           >
-            {initials[i]}
-          </span>
-        );
-      })}
+            <Sparkles size={13} className="text-purple-300" />
+            <span>Scale Your Engineering Today</span>
+          </motion.div>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-3xl mx-auto text-center">
-        <motion.h2
-          className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight mb-6"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-        >
-          Great software isn&apos;t built by one developer. It&apos;s built by the{' '}
-          <span className="underline decoration-white/30 decoration-4 underline-offset-4">
-            right collective
-          </span>
-          .
-        </motion.h2>
-
-        <motion.p
-          className="text-white/80 text-lg md:text-xl mb-10"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          Ready to build something extraordinary?
-        </motion.p>
-
-        <motion.div
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.35 }}
-        >
-          {/* Primary button */}
-          <button
-            className="group relative px-8 py-3.5 rounded-full bg-white text-foreground font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-xl magnetic-btn"
-            style={{
-              boxShadow: '0 0 20px rgba(255,255,255,0.3)',
-            }}
+          <motion.h2
+            className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Meet Experts
-            <ArrowRight
-              size={18}
-              className="inline-block ml-2 transition-transform group-hover:translate-x-1"
-            />
-          </button>
+            Great software is built by the{' '}
+            <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-cyan-300 bg-clip-text text-transparent">
+              right collective
+            </span>
+            .
+          </motion.h2>
 
-          {/* Secondary button */}
-          <button
-            className="group px-8 py-3.5 rounded-full border-2 border-white/40 text-white font-semibold text-base transition-all duration-300 hover:bg-white/15 hover:border-white/70 hover:scale-105 magnetic-btn"
+          <motion.p
+            className="text-gray-300 text-sm sm:text-base md:text-lg mb-8 max-w-xl mx-auto font-normal leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Start Project
-          </button>
-        </motion.div>
+            Deploy dedicated engineering squads or scale your existing team with top-tier technology experts.
+          </motion.p>
+
+          <motion.div
+            className="flex flex-col sm:flex-row items-center justify-center gap-3.5"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <button className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-white text-gray-900 font-semibold text-sm hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-2 cursor-pointer">
+              <span>Meet Our Experts</span>
+              <ArrowRight size={16} />
+            </button>
+            <button className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-white/10 border border-white/20 text-white font-medium text-sm hover:bg-white/20 transition-all duration-300 cursor-pointer backdrop-blur-md">
+              Start Project Inquiry
+            </button>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5d. FOOTER
+// 4. FOOTER
 // ═══════════════════════════════════════════════════════════
 const footerColumns = [
-  {
-    title: 'Company',
-    links: ['About', 'Careers', 'Blog', 'Press'],
-  },
-  {
-    title: 'Services',
-    links: ['Web Development', 'Mobile Apps', 'AI & ML', 'Cloud Solutions'],
-  },
-  {
-    title: 'Industries',
-    links: ['Healthcare', 'Fintech', 'Retail', 'Education'],
-  },
-  {
-    title: 'Quick Links',
-    links: ['Contact', 'Privacy', 'Terms', 'Sitemap'],
-  },
+  { title: 'Company', links: ['About Us', 'Careers', 'Engineering Blog', 'Press Kit'] },
+  { title: 'Services', links: ['Web Architecture', 'DevOps & CI/CD', 'AI & Machine Learning', 'Cloud Infra'] },
+  { title: 'Domains', links: ['Fintech', 'Healthcare', 'E-Commerce', 'PropTech'] },
+  { title: 'Legal', links: ['Privacy Policy', 'Terms of Service', 'Security Policy', 'Sitemap'] },
 ];
 
 const socialLinks = [
@@ -306,111 +181,70 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="relative bg-[#0a0e27] text-white">
-      {/* Wave separator */}
-      <svg
-        className="absolute -top-px w-full"
-        viewBox="0 0 1440 60"
-        preserveAspectRatio="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={ACCENT.purple} />
-            <stop offset="50%" stopColor={ACCENT.blue} />
-            <stop offset="100%" stopColor={ACCENT.cyan} />
-          </linearGradient>
-        </defs>
-        <path
-          d="M0,20 C360,60 720,0 1080,40 C1260,55 1380,25 1440,30 L1440,0 L0,0 Z"
-          fill="url(#waveGrad)"
-        />
-      </svg>
-
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-16 pb-8">
-        {/* Logo */}
-        <div className="mb-12 md:mb-16">
-          <motion.span
-            className="text-2xl md:text-3xl font-bold"
-            style={{
-              background: `linear-gradient(135deg, ${ACCENT.purple}, ${ACCENT.cyan})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            Techades
-          </motion.span>
-          <p className="text-white/50 text-sm mt-2 max-w-md">
-            Building extraordinary digital experiences with world-class engineering talent.
-          </p>
-        </div>
-
-        {/* Columns */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
-          {footerColumns.map((col) => (
-            <div key={col.title}>
-              <h4 className="font-semibold text-sm uppercase tracking-wider text-white/70 mb-4">
-                {col.title}
-              </h4>
-              <ul className="space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="group relative text-sm text-white/50 hover:text-white transition-colors duration-200 inline-block"
-                    >
-                      {link}
-                      <span className="absolute bottom-0 left-0 w-0 h-px bg-white/60 transition-all duration-300 group-hover:w-full" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
+    <footer className="border-t border-gray-200/70 bg-white/60 backdrop-blur-xl text-gray-700">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-12">
+          {/* Brand Info */}
+          <div className="md:col-span-2">
+            <Image
+              src={getAssetPath('/team/techades-logo.png')}
+              alt="Techades Logo"
+              width={160}
+              height={40}
+              className="h-8 sm:h-9 w-auto object-contain mb-3"
+            />
+            <p className="text-gray-500 text-xs sm:text-sm max-w-sm leading-relaxed mb-6 font-normal">
+              Building high-performance web platforms, automated CI/CD pipelines, and enterprise-grade software products.
+            </p>
+            <div className="flex items-center gap-3">
+              {socialLinks.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={social.label}
+                    href="#"
+                    aria-label={social.label}
+                    className="w-8 h-8 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 hover:bg-purple-600 hover:text-white transition-all duration-200 shadow-xs"
+                  >
+                    <Icon size={15} />
+                  </a>
+                );
+              })}
             </div>
-          ))}
+          </div>
+
+          {/* Links Columns */}
+          <div className="md:col-span-3 grid grid-cols-2 sm:grid-cols-4 gap-6">
+            {footerColumns.map((col) => (
+              <div key={col.title}>
+                <h4 className="font-semibold text-xs uppercase tracking-wider text-gray-900 mb-3">
+                  {col.title}
+                </h4>
+                <ul className="space-y-2">
+                  {col.links.map((link) => (
+                    <li key={link}>
+                      <a
+                        href="#"
+                        className="text-xs text-gray-500 hover:text-purple-600 transition-colors duration-200 block"
+                      >
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Newsletter */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 mb-12 md:mb-16 max-w-md">
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="flex-1 w-full px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors"
-          />
-          <button
-            className="w-full sm:w-auto px-6 py-2.5 rounded-full font-medium text-sm text-white transition-all duration-300 hover:scale-105 magnetic-btn"
-            style={{ background: GRADIENT.purpleToBlue }}
-          >
-            Subscribe
-          </button>
-        </div>
-
-        {/* Social icons */}
-        <div className="flex items-center gap-4 mb-8">
-          {socialLinks.map((social) => {
-            const Icon = social.icon;
-            return (
-              <a
-                key={social.label}
-                href="#"
-                aria-label={social.label}
-                className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-all duration-200"
-              >
-                <Icon size={16} />
-              </a>
-            );
-          })}
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-white/10 pt-6">
-          <p className="text-center text-xs text-white/30">
-            &copy; {new Date().getFullYear()} Techades. All rights reserved.
-          </p>
+        {/* Bottom Bar */}
+        <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400 font-normal">
+          <p>&copy; {new Date().getFullYear()} Techades. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <a href="#" className="hover:text-gray-600 transition-colors">Privacy</a>
+            <a href="#" className="hover:text-gray-600 transition-colors">Terms</a>
+            <a href="#" className="hover:text-gray-600 transition-colors">Security</a>
+          </div>
         </div>
       </div>
     </footer>
